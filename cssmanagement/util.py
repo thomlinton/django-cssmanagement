@@ -45,8 +45,8 @@ class Stylesheet(object):
     get_version = classmethod(get_version)
 
     def inc_version(cls):
-        version_date = get_version(date_only=True)
-        version_int = get_version(int_only=True)+1
+        version_date = cls.get_version(date_only=True)
+        version_int = cls.get_version(int_only=True)+1
 
         try:
             version_file = open('/'.join([CSS_PATH,CSS_VERSION_FILE]),'w')        
@@ -60,7 +60,7 @@ class Stylesheet(object):
     inc_version = classmethod(inc_version)
 
     def _get_filename(cls):
-        return '.'.join(['/'.join([CSS_PATH,get_version()]),'css'])
+        return '.'.join(['/'.join([CSS_PATH,cls.get_version()]),'css'])
 
     get_filename = classmethod(_get_filename)
 
@@ -126,7 +126,7 @@ class Stylesheet(object):
             os.remove(cur_filename)
 
     def stylesheets_modified(self):
-        last_modified = Stylesheet.get_last_modified()
+        last_modified = Stylesheet.get_last_modification()
         cur_filename = Stylesheet.get_filename()
 
         if hasattr(settings,'CSS_MANAGED_FILES'):
@@ -151,8 +151,8 @@ class Stylesheet(object):
                         if stat.st_mtime > last_modified+1:
                             last_modified = stat.st_mtime
 
-        if last_modified > Stylehsheet.get_last_modified():
-            Stylesheet.get_last_modified(last_modified)
+        if last_modified > Stylesheet.get_last_modification():
+            Stylesheet.set_last_modification(last_modified)
             return True
         return False
 
