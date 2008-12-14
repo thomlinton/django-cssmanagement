@@ -200,13 +200,10 @@ class Stylesheet(object):
         return False
 
     def render(cls):
-        print "settings.DEBUG:", settings.DEBUG
         if not settings.DEBUG:
-            print "production stylesheets"
             return cls.get_production_stylesheet()
         else:
             stylesheet = cls.get_stylesheet_list()
-            print "rendering stylesheet list:", stylesheet
             return stylesheet
 
     render = classmethod(render)
