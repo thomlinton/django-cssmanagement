@@ -1,0 +1,18 @@
+from django.utils.translation import ugettext_lazy as _
+from django.conf import settings
+from django import template
+from cssmanagement.management.commands.cssmanagement import get_version
+
+register = template.Library()
+class CSSVersionNode(template.Node):
+    def render(self, context):
+        return '.'.join(["/".join([settings.MEDIA_URL,'css',get_version()]),'css'])
+
+def get_css_production_url(parser, token):
+    try:
+        tag_name = token.split_contents()
+    except ValueError:
+        raise template.TemplateSyntaxError(_(u'%s tag takes no arguments') % tag_name)
+    return CSSVersionNode()
+
+register.tag('css_production_url', get_css_production_url)
