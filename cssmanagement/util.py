@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.template.loader import render_to_string
 import logging, datetime, time
 import optparse, os
 
@@ -76,27 +77,37 @@ class Stylesheet(object):
                 if asset.endswith('.css') and not cur_filename.endswith(asset):
                     unmanaged_stylesheets.append(asset)
 
-    def get_stylesheet_list(cls):
+    def get_stylesheet_list(cls,rendered):
         stylesheets = ""
         files = None
         root_path = '/'.join([settings.MEDIA_URL,'css'])
         
+        # collect dependencies and compile complete/absolute paths
         if hasattr(settings,'CSS_MANAGED_FILES'):
             files = settings.CSS_MANAGED_FILES
         else:
             files = Stylesheet.get_unmanaged_stylesheets()
-            
-        for stylesheet in files:
-            src = '/'.join([root_path,stylesheet])
-            stylesheets = "%s\n%s" % (stylesheets,CSS_LINK%(src))
 
+        translated_files = []
+        for file in files:
+            translated_files.append( '/'.join([root_path,file]) )
+
+        # if requested, return only paths
+        if not rendered:
+            return translated_files
+
+        for path in translated_files:
+            stylesheets = "%s\n%s" % \
+                (stylesheets,render_to_string('cssmanagement/link.html',{'src':path}))
         return stylesheets
 
     get_stylesheet_list = classmethod(get_stylesheet_list)
 
-    def get_production_stylesheet(cls):
+    def get_production_stylesheet(cls,rendered):
         src = '.'.join(["/".join([settings.MEDIA_URL,'css',cls.get_version()]),'css'])
-        return "%s\n" % (CSS_LINK%(src))
+        if not rendered:
+            return src
+        return render_to_string('cssmanagement/link.html',{'src':src})
 
     get_production_stylesheet = classmethod(get_production_stylesheet)
 
@@ -199,11 +210,10 @@ class Stylesheet(object):
         logging.info( "No changed detected. Exiting." )
         return False
 
-    def render(cls):
+    def render(cls,render_html=True):
         if not settings.DEBUG:
-            return cls.get_production_stylesheet()
+            return cls.get_production_stylesheet(render_html)
         else:
-            stylesheet = cls.get_stylesheet_list()
-            return stylesheet
+            return cls.get_stylesheet_list(render_html)
 
     render = classmethod(render)
